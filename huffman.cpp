@@ -2,27 +2,12 @@
 #include <algorithm>
 #include <iomanip>
 #include<string>
+#include<sstream>
+#include<iostream>
 using namespace std;
-bool sortBySecond(const Node* a,const Node* b)
+bool sortBySecond(const HuffmanTree* a,const HuffmanTree* b)
 {
-    return (a->data.second < b->data.second);
-}
-//направи го шаблонно
-void printMap(unordered_map<char, int> m)
-{
-     for ( const pair<char,int> p : m )
-    {
-        cout << " " << p.first << ":"<< p.second;
-    }
-    cout <<endl;
-}
-void printMap(unordered_map<char, string> m)
-{
-    for ( const pair<char,string> p : m )
-    {
-        cout<<" " << p.first << ":"<< p.second;
-    }
-    cout <<endl;
+    return (a->getRootData().second < b->getRootData().second);
 }
 int binToDec(string bin)
 {
@@ -39,6 +24,23 @@ int binToDec(string bin)
         }
     }
     return result;
+}
+void Huff::copy(Huff const& other)
+{
+    tree = other.tree;
+    frequencyTable = other.frequencyTable;
+    codeTable = other.codeTable;
+    inputFile = other.inputFile;
+    outputFile = other.outputFile;
+    code = other.code;
+}
+Huff& Huff::operator=(Huff const& other)
+{
+    if(this !=& other)
+    {
+        copy(other);
+    }
+    return *this;
 }
 void Huff::setInputFile(string name)
 {
@@ -67,38 +69,28 @@ void Huff::createFrequencyTable()
     }
     fin.close();
 }
-bool Huff::isMemberHelp(Node* const& r, char c) const
+
+string Huff::binaryCodeHelp(const char c, const HuffmanTree& start) const
 {
-    if(r == nullptr)
-        return false;
-    if(c == r->data.first)
-        return true;
-    return isMemberHelp(r->left, c) || isMemberHelp(r->right, c);
-}
-bool Huff::isMember(char c) const
-{
-    return isMemberHelp(root, c);
-}
-string Huff::binaryCodeHelp(const char c, const Node* start) const
-{
-    if(c == start->data.first)
+    if(c == start.getRootData().first)
         return "";
-    if(start == nullptr)
+    if(start.empty())
         return "";
-    if(isMemberHelp(start->left,c))
-        return "0" + binaryCodeHelp(c, start->left);
-    if(isMemberHelp(start->right,c))
-        return "1" + binaryCodeHelp(c, start->right);
+    if(start.left().isMember(c))
+        return "0" + binaryCodeHelp(c, start.left());
+    if(start.right().isMember(c))
+        return "1" + binaryCodeHelp(c, start.right());
     return "";//ако символът не се съдържа изобщо в дървото с корен start
 }
+
 string Huff::binaryCode(const char c) const
 {
-    return binaryCodeHelp(c,root);
+    return binaryCodeHelp(c,tree);
 }
 
 void Huff::createCodeTable()
 {
-    if(root == nullptr)
+    if(tree.empty())
         return;
 
     for( pair<char,int> p : frequencyTable)
@@ -106,7 +98,7 @@ void Huff::createCodeTable()
         codeTable.emplace(p.first,binaryCode(p.first));
     }
 }
-void Huff::saveBinaryCode() const
+void Huff::saveBinaryCode()
 {
     ifstream fin;
     ofstream fout;
@@ -124,6 +116,7 @@ void Huff::saveBinaryCode() const
             if(p.first == c)
             {
                 fout<<p.second;
+                code += p.second;
             }
         }
     }
@@ -131,7 +124,7 @@ void Huff::saveBinaryCode() const
     fout.close();
 }
 //връща като резултат възела с най-малка числена стойност като същевременно го премахва от списъка с възели, подаден като параметър
-Node*& Huff::findMinNode(list<Node*>& nodes)
+HuffmanTree*& Huff::findMinNode(list<HuffmanTree*>& nodes)
 {
     nodes.sort(sortBySecond);
     return nodes.front();
@@ -141,80 +134,82 @@ void Huff::buildTree()
 {
     //стъпка 2 от построяване на дърво на Хъфман от описанието
     //създаваме n дървета от по един възел, който съдържа наредена двойка и ги записваме в списък, като той е сортиран във низходяш
-    list<Node*> nodes;
+    list<HuffmanTree*> nodes;
     for(const pair<char,int> p : frequencyTable)
     {
-        nodes.push_front(new Node(p));
+        nodes.push_front(new HuffmanTree(p, HuffmanTree(), HuffmanTree()));
     }
-   /* nodes.sort(sortBySecond);
-    cout<<nodes.front()->data.first<<" "<<nodes.front()->data.second<<endl;*/
     while(nodes.size() > 1)
     {
-        Node* fst = findMinNode(nodes);
+        HuffmanTree* fst = findMinNode(nodes);
         nodes.pop_front();//премахваме fst от списъка
-        Node* snd = findMinNode(nodes);
+        HuffmanTree* snd = findMinNode(nodes);
         nodes.pop_front();//премахваме snd от списъка
-        Node* res = new Node(make_pair(' ',fst->data.second + snd->data.second), fst, snd);//строим ново дърво с поддървета 2те най-малки досега
+        HuffmanTree* res = new HuffmanTree(make_pair(' ',fst->getRootData().second + snd->getRootData().second), *fst, *snd);//строим ново дърво с поддървета 2те най-малки досега
         nodes.push_front(res);
     }
     //има само 1 възел в списъка и това е нашият корен
-  //  root = nodes.pop_front();
 
-  root = nodes.front();
+    tree =  *(nodes.front());
+    nodes.pop_front();
 }
 void Huff::saveDecCode()const
 {
     ofstream fout;
-    fout.open(outputFile, ios::out|ios::app);
+    fout.open(outputFile, ios::out);//да изтрива бинарната последователност, нея я имаме записана в code
     list<string> subs;
-    for(int i=0; i<code.size(); i + 8)
+
+    for(int i=0; i<=code.size(); i += 8)
     {
+        cout<<i<<endl;
+        cout<<code.substr(i,8)<<endl;
         subs.push_back( code.substr(i,8));
-        cout<<code.substr(i,8);
     }
+    fout<<"\n";
     for(const string s : subs)
     {
         int tmp = binToDec(s);
+        cout<<"tmp: "<<tmp<<endl;
         cout<<tmp<<endl;
-        fout<<tmp;
+        fout<<tmp<<" ";
     }
     fout.close();
-
 }
-void prettyPrint(ostream& out = cout,int currentHeight = 0, Node* start = nullptr)
+void Huff::calculateCompressionRate() const
 {
-    if(start ==nullptr)
-        return;
-    prettyPrint(out, currentHeight + 1, start->right);
-    if(start->data.first == ' ')
-        out<<setw(5*currentHeight)<<" "<<start->data.second<<endl;
-    else
-        out<<setw(5*currentHeight)<<" "<<start->data.first<<" "<<start->data.second<<endl;
-    prettyPrint(out, currentHeight + 1,start->left);
-
+    int counter = 0;
+    ifstream fin;
+    fin.open(inputFile, ios::in);
+    char c;
+    while(true)
+    {
+        fin.get(c);
+        counter ++;
+        //за да не чете последния символ 2 пъти
+        if(fin.eof())
+            break;
+    }
+    fin.close();
+    cout<<code.size()<<":"<<counter - 1<<endl;;
 }
 void Huff::printTree() const
 {
-    prettyPrint(cout,0,root);
-
+    tree.prettyPrint(cout,0);
 }
+
 void Huff::printFrequencyTable() const
 {
-    printMap(frequencyTable);
+    for ( const pair<char,int> p : frequencyTable )
+    {
+        cout << " " << p.first << ":"<< p.second;
+    }
+    cout <<endl;
 }
 void Huff::printCodeTable() const
 {
-    printMap(codeTable);
-}
-int main()
-{
-    Huff h;
-    h.setInputFile("input.txt");
-    h.setOutputFile("output.txt");
-    h.createFrequencyTable();
-    h.buildTree();
-    h.createCodeTable();
-    h.saveBinaryCode();
-    h.saveDecCode();
-    return 0;
+    for ( const pair<char,string> p : codeTable)
+    {
+        cout<<" " << p.first << ":"<< p.second;
+    }
+    cout <<endl;
 }
