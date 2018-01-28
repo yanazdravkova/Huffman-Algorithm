@@ -10,6 +10,8 @@
 #include<set>
 #include<list>
 using namespace std;
+
+//по-удачно има - Compressor
 class Huff
 {
     HuffmanTree tree;
@@ -28,22 +30,32 @@ public:
     Huff():tree(), frequencyTable(), codeTable(), inputFile(""), outputFile(""), code("") {}
     Huff(HuffmanTree _tree, unordered_map<char,int> _frequencyTable, unordered_map<char,string> _codeTable, string _inputFile, string _outputFile, string _code):tree(_tree),
         frequencyTable(_frequencyTable),codeTable(_codeTable),inputFile(_inputFile),outputFile(_outputFile), code(_code) {}
+    Huff(Huff const& other);
     Huff& operator=(Huff const& other);
-    ~Huff();
 
     void setInputFile(string name);
     void setOutputFile(string name);
 
+    string getInputFileName() const;
+    string getOutputFileName() const;
+    string getCode() const;
+
     void createFrequencyTable();
     void createCodeTable();
     void buildTree();
+    void enterTree();
+    void createBinaryCode();
+    void calculateCompressionRate();
 
     void printTree() const;
     void printFrequencyTable() const;
     void printCodeTable() const;
 
-    void saveBinaryCode();
+
+    void saveBinaryCode() const;
     void saveDecCode() const;
-    void calculateCompressionRate()const;
+    void saveTree() const;
+
+    void run();
 };
 #endif // _HUFFMAN_

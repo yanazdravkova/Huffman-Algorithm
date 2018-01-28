@@ -64,29 +64,32 @@ pair<char,int> HuffmanTree::enterPair(istream& in) const
 {
     char c;
     int i;
-    cout<<"\n enter symbol: ";
+    cout<<"\nsymbol: ";
     in>>c;
-    cout<<"\n enter symbol frequency: ";
+    if(c == '*')
+        c = ' ';
+    cout<<"\nsymbol frequency: ";
     in>>i;
     return make_pair(c,i);
 }
 void HuffmanTree::enterHelp(istream& in, Node*& curr)
 {
-     int answer;
-    cout<<"do you want to quit? 0/1 ";
+    int answer;
+    cout<<"stop 0/1 ";
     cin>>answer;
     if(answer == 1)
         return;
     pair<char,int> p = enterPair(in);
     cout<<p.first<<":"<<p.second<<"\n";
     curr = new Node(p);
-    cout<<"left -> \n";
+    cout<<"\nleft of "<<curr->data.first<<curr->data.second<<" -> \n";
     enterHelp(in, curr->left);
-    cout<<"right -> \n";
+    cout<<"\nright of "<<curr->data.first<<curr->data.second<<" -> \n";
     enterHelp(in, curr->right);
 }
 void HuffmanTree::enter(istream& in)
 {
+    cout<<"for nodes without symbols, set * as their symbol\n";
     enterHelp(in, root);
 }
 bool HuffmanTree::isMember(const char c) const
@@ -100,4 +103,12 @@ bool HuffmanTree::isMember(const char c) const
 pair<char, int> HuffmanTree::getRootData() const
 {
     return root->data;
+}
+
+void HuffmanTree::save(string fname) const
+{
+    ofstream fout;
+    fout.open(fname, ios::out);//изтрива всичко друго, което е имало преди във файла
+    prettyPrint(fout,0);
+    fout.close();
 }

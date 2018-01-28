@@ -22,7 +22,7 @@ class HuffmanTree
     Node* copy(Node* node);
     void erase(Node* node);
     HuffmanTree(Node* root): root(copy(root)) {}
-    void enterHelp(istream& in , Node*& curr);
+    void enterHelp(istream& in, Node*& curr);
     pair<char,int> enterPair(istream& in) const;
 public:
     HuffmanTree(): root(nullptr) {}
@@ -49,6 +49,49 @@ public:
     void enter(istream& in);
     bool isMember(const char c) const;
     pair<char, int> getRootData() const;
+    void save(string fname) const;
+
+    ///използвана програма от семинари
+    class Position
+    {
+        Node*& p;
+
+    public:
+        explicit Position(Node*& p): p(p) {};
+
+        explicit operator bool()
+        {
+            return p != nullptr;
+        }
+
+        bool operator!()
+        {
+            return !(bool)*this;
+        }
+
+        pair<char, int> operator*()
+        {
+            return p->data;
+        }
+
+        Position left() const
+        {
+            return Position(p->left);
+        }
+
+        Position right() const
+        {
+            return Position(p->right);
+        }
+        bool isLeaf()
+        {
+            return !(left()) && !(right());
+        }
+    };
+    Position getRoot()
+    {
+        return Position(root);
+    }
 };
 
 #endif // _TREE_HUFFMAN_H_

@@ -1,15 +1,34 @@
 #include<huffman.h>
+#include<decompressor.h>
 #include<command.h>
 #include<iostream>
+
 using namespace std;
+void compression()
+{
+    Huff h;
+    h.run();
+}
+void decompress()
+{
+    Decompressor de;
+    de.run();
+}
 int main()
 {
-    Command c;
-    while(true)
+    compression();
+   // decompress();
+    /*Command* c = new Command;
+    while(!c->getStopFlag())
     {
-        cout<<"Enter command: ";
-        c.setCommand("compress");
-        c.run();
+        cout<<"\nenter command: ";
+        string name;
+        getline(cin, name);
+        cout<<"command given: "<<name<<endl;
+        c->setCommand(name);
+        c->run();
     }
+    delete c;
+    */
     return 0;
 }

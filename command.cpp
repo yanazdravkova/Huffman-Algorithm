@@ -4,74 +4,84 @@
 #include<string>
 #include <stdlib.h>
 using namespace std;
-void Command::copy(Command const& other)
+
+
+void Command::setCommand(string c)
 {
-    h = other.h;
-    command = other.command;
+    command = c;
 }
-    Command::Command(Command const& other):Command(other.h, other.command){}
-    Command& Command::operator=(Command const& other)
+string Command::getCommand() const
+{
+    return command;
+}
+bool Command::getStopFlag() const
+{
+    return stopFlag;
+}
+void Command::setInputFile(string ifile)
+{
+    com.setInputFile(ifile);
+    dec.setInputFile(ifile);
+}
+void Command::setOutputFile(string ofile)
+{
+    dec.setOutputFile(ofile);
+    com.setOutputFile(ofile);
+}
+void Command::run()
+{
+    if(command.compare("compress") == 0)
     {
-        if(this != &other)
+        if(com.getInputFileName() == "")
         {
-            copy(other);
+            cerr<<"NO INPUT FILE NAME DECLARED";
+            return;
         }
-        return *this;
+        if(com.getOutputFileName() == "")
+        {
+            cerr<<"NO OUTPUT FILE NAME DECLARED";
+            return;
+        }
+        com.createFrequencyTable();
+        com.printFrequencyTable();
+        com.buildTree();
+        com.printTree();
+        com.saveTree();
+        com.createCodeTable();
+        com.printCodeTable();
+        com.createBinaryCode();
+        com.saveBinaryCode();
     }
-
-    void Command::setCommand(string c)
+    else if(command.compare("decompress") == 0)
     {
-        command = c;
+        if(dec.getInputFile() == "")
+        {
+            cerr<<"NO INPUT FILE NAME DECLARED";
+            return;
+        }
+        if(dec.getOutputFile() == "")
+        {
+            cerr<<"NO OUTPUT FILE NAME DECLARED";
+            return;
+        }
+        dec.run();
     }
-    string Command::getCommand()
+    else if(command.compare( "i") == 0)
     {
-        return command;
+        string inputFile;
+        getline(cin,inputFile);
+        setInputFile(inputFile);
     }
-    void Command::run()
+    else if(command.compare("o") == 0)
     {
-        cout<<"run executed"<<endl;
-        if(command.compare("compress") == 0)
-        {
-            h = new Huff();
-            cout<<"~!!!!!";
-            h->createFrequencyTable();
-            cout<<endl<<"FREQUENCY TABLE"<<endl;
-            h->printFrequencyTable();
-            h->buildTree();
-            cout<<"TREE"<<endl;
-            h->printTree();
-            h->createCodeTable();
-            cout<<"CODE TABLE"<<endl;
-            h->printCodeTable();
-            cout<<"COMPRESSION RATE"<<endl;
-            h->calculateCompressionRate();
-            int a;
-            cout<<"to save binary format press 1 || to save decimal press 0";
-            cin>>a;
-            if(a == 1)
-                h->saveBinaryCode();
-            else
-                h->saveDecCode();
-        }
-        else if(command.compare("decompress") == 0)
-        {
-
-        }
-        else if(command.compare( "i") == 0)
-        {
-            string inputFile;
-            getline(cin,inputFile);
-            h->setInputFile(inputFile);
-        }
-        else if(command.compare("o") == 0)
-        {
-            string outputFile;
-            getline(cin,outputFile);
-            h->setOutputFile(outputFile);
-        }
-        else
-        {
-            cout<<"exiting program to follow ";
-            exit(0);
-        }
+        string outputFile;
+        getline(cin,outputFile);
+        setOutputFile(outputFile);
     }
+    else
+    {
+        cout<<"exiting program to follow ";
+        stopFlag = true;
+        exit(0);
+    }
+}
